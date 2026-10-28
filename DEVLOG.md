@@ -12,7 +12,7 @@
 - 모듈 구조용 디렉토리 생성: `features/`, `components/`, `hooks/`, `utils/`, `types/`, `test/`
 - `index.html`: `lang="ko"`, 모바일 viewport 설정
 - `CLAUDE.md`(개발 지침), `DEVLOG.md`(변경 로그) 추가
-- Git 저장소 초기화
+- Git 저장소 초기화, 원격 저장소 연결 (https://github.com/seungjun-dev/number-baseball-game)
 
 ### 테스트
 - `App.test.tsx`: 타이틀 렌더링 스모크 테스트
