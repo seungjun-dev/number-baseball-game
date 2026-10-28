@@ -44,11 +44,13 @@ src/
    - 순수 로직: `*.test.ts` 단위 테스트
    - 컴포넌트: `*.test.tsx` (Testing Library, 사용자 관점 쿼리 사용)
    - 테스트 파일은 대상 파일 옆에 둔다.
+   - 타이머가 있는 컴포넌트를 user-event로 테스트할 때는 `vi.useFakeTimers({ shouldAdvanceTime: true })` + `userEvent.setup({ delay: null })` 조합을 쓴다 (그냥 fake timer를 쓰면 RTL 비동기 래퍼가 멈춤).
    - 커밋 전 `npm test`, `npm run build`, `npm run lint` 가 모두 통과해야 한다.
 3. **랜덤 등 비결정성**은 주입 가능하게 설계해 테스트에서 고정할 수 있게 한다.
 4. **모바일 우선**: WebView 대상이므로 터치 친화적 UI, 작은 화면(360px~) 기준으로 레이아웃한다. 브라우저 전용 API 사용 시 WebView 호환성을 고려한다.
 5. TypeScript `any` 사용 지양, 공개 함수에는 명시적 타입을 단다.
-6. UI 문구는 한국어.
+6. UI 문구는 한국어. (단, 시안의 영문 중계 콜/라벨 — "OUT!", "SCOREBOARD" 등 — 은 시안을 따른다)
+7. 스타일은 시안의 `src/index.css` 클래스를 그대로 사용한다. 시안에 없는 보완 스타일은 파일 하단 `App additions` 블록에 추가한다.
 
 ## 변경 로그
 - 모든 기능 추가/수정/설정 변경은 `DEVLOG.md` 최상단에 날짜와 함께 기록한다.
