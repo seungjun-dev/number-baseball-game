@@ -9,4 +9,6 @@ npm test        # 테스트
 npm run build   # 빌드
 ```
 
+온라인 기능(Supabase) 로컬 실행은 [docs/LOCAL_BACKEND_SETUP.md](docs/LOCAL_BACKEND_SETUP.md)를 참고하세요.
+
 개발 지침은 [CLAUDE.md](CLAUDE.md), 변경 이력은 [DEVLOG.md](DEVLOG.md)를 참고하세요.

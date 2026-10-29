@@ -11,6 +11,7 @@
 - Vite (빌드/개발 서버), `base: './'` — WebView 로컬 에셋 로딩을 위해 상대 경로 빌드 유지
 - Vitest + React Testing Library + jsdom (테스트)
 - oxlint (린트)
+- Supabase (BaaS) — Postgres + RLS, Auth(익명 → 카카오/구글 연결), Realtime. 로컬은 Supabase CLI + Docker
 
 ## 명령어
 | 명령 | 설명 |
@@ -22,6 +23,10 @@
 | `npm run test:watch` | 테스트 watch 모드 |
 | `npm run typecheck` | 타입체크만 실행 |
 | `npm run lint` | 린트 |
+| `npm run supabase:start` / `supabase:stop` / `supabase:status` | 로컬 백엔드 (Docker 필요) |
+| `npm run db:migration <이름>` | 새 마이그레이션 생성 |
+| `npm run db:reset` | 로컬 DB 초기화 + 마이그레이션 재적용 |
+| `npm run db:types` | DB 타입 생성 → `src/lib/supabase/database.types.ts` |
 
 ## 디렉토리 구조 (모듈화 원칙)
 ```
@@ -36,6 +41,12 @@ src/
   utils/                # 공용 유틸 (순수 함수)
   types/                # 공용 타입
   test/                 # 테스트 셋업
+  lib/supabase/         # Supabase 클라이언트·설정·생성 타입
+supabase/
+  config.toml           # 로컬 백엔드 설정
+  migrations/           # 스키마·RLS·RPC (SQL, 커밋 대상)
+  tests/                # pgTAP DB 테스트
+docs/                   # 설계 문서 (ONLINE_MATCH_DESIGN.md, LOCAL_BACKEND_SETUP.md)
 ```
 
 ## 개발 규칙
@@ -51,6 +62,16 @@ src/
 5. TypeScript `any` 사용 지양, 공개 함수에는 명시적 타입을 단다.
 6. UI 문구는 한국어. (단, 시안의 영문 중계 콜/라벨 — "OUT!", "SCOREBOARD" 등 — 은 시안을 따른다)
 7. 스타일은 시안의 `src/index.css` 클래스를 그대로 사용한다. 시안에 없는 보완 스타일은 파일 하단 `App additions` 블록에 추가한다.
+
+## 백엔드 (Supabase) 규칙
+- 설계는 `docs/ONLINE_MATCH_DESIGN.md`, 로컬 환경은 `docs/LOCAL_BACKEND_SETUP.md` 를 따른다.
+- 화면 코드는 Supabase를 직접 호출하지 않는다. `features/<기능>/` 의 service/repository가 `getSupabase()` 를 사용한다.
+- 비밀 숫자·판정·매칭·승패는 **서버(Postgres RPC)에서만** 처리한다. 클라이언트 값을 신뢰하지 않는다.
+- 모든 테이블에 RLS를 켠다. 쓰기는 원칙적으로 RPC(`security definer`)로만 허용한다.
+- DB 변경은 반드시 마이그레이션 파일로 한다 (Studio에서 직접 수정 금지). 변경 후 `db:reset` → `db:types` → 테스트.
+- 판정 로직을 SQL로 옮길 때는 TS 테스트와 같은 케이스(정답 3647 예시)를 pgTAP 테스트로 검증한다.
+- 키: 앱에는 Publishable key만 (`.env.local`). Secret/service_role key와 OAuth 시크릿은 `supabase/.env` 등 Git 밖에 둔다.
+- `.env.local` 이 없으면 온라인 기능만 비활성화되고 싱글 플레이는 동작해야 한다.
 
 ## 변경 로그
 - 모든 기능 추가/수정/설정 변경은 `DEVLOG.md` 최상단에 날짜와 함께 기록한다.

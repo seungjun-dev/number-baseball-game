@@ -2,6 +2,29 @@
 
 최신 항목이 위에 오도록 기록합니다.
 
+## 2026-10-29 — 온라인 대전용 백엔드(Supabase) 개발 환경 세팅
+### 결정
+- 1:1 대전을 온라인(각자 폰)으로 하기로 결정 → 전적 포함 서버 데이터는 Supabase(BaaS) 사용
+  - 선정 이유: 관계형 DB(전적 통계), 무료 플랜에서 서버 로직 가능, 카카오/구글 로그인 기본 지원, 익명 로그인
+- 판정·매칭은 Postgres RPC(서버)에서 처리, 비밀 숫자는 앱이 읽을 수 없는 테이블에 저장
+- 매칭: 초대 코드 + 랜덤 매칭(대기열 + `FOR UPDATE SKIP LOCKED` + heartbeat + pg_cron 정리)
+
+### 변경 사항
+- `supabase` CLI(devDependency), `@supabase/supabase-js` 설치
+- `supabase init` → `supabase/config.toml`
+  - 익명 로그인 / 수동 계정 연결 활성화, site_url·redirect URL을 Vite(5173)·Capacitor 기준으로 변경
+  - 카카오/구글 OAuth 블록 추가 (비활성, 키는 `supabase/.env` 의 env() 참조)
+  - 로컬 자원 절약: analytics, storage vector 비활성
+- `src/lib/supabase/`: 환경변수 기반 클라이언트(`getSupabase`, 미설정 시 null → 오프라인 동작), `vite-env.d.ts` 환경변수 타입
+- `.env.example`, `supabase/.env.example`, `supabase/.gitignore`에 시크릿 파일 추가
+- npm 스크립트: `supabase:start|stop|status`, `db:migration`, `db:reset`, `db:types`, `functions:serve`
+- 문서: `docs/LOCAL_BACKEND_SETUP.md`(Docker 설치·설정 가이드), `docs/ONLINE_MATCH_DESIGN.md`(대전·매칭 설계)
+- `CLAUDE.md`에 백엔드 규칙 추가
+
+### 테스트
+- `readSupabaseConfig` 단위 테스트 추가 — 전체 테스트, build, lint 통과
+- Docker 미설치로 `supabase start`는 아직 미검증 (config 파싱은 정상 확인)
+
 ## 2026-10-28 — 싱글 플레이 숫자야구 게임 구현
 ### 변경 사항
 - 시안(`src/App.tsx`, `src/index.css`)을 원본 그대로 별도 커밋으로 보존한 뒤 모듈 구조로 재구성

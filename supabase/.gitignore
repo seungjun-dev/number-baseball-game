@@ -1,0 +1,12 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# 서버 비밀값 (OAuth 시크릿, Edge Function 시크릿)
+.env
+functions/.env
