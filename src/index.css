@@ -22,3 +22,5 @@
 .broadcast .versus-header,.broadcast .secret-box{background:#142332;border-color:#304350}.broadcast .versus-side strong,.broadcast .secret-box h2{color:#edf4f4}.broadcast .turn-banner{background:#183a40;color:#edf4f4}.broadcast .turn-banner.mine{background:#c4fb4b;color:#121b1e}.broadcast .invite-code{background:#142332}
 @media(max-width:700px){.invite-code{font-size:30px;letter-spacing:5px}.join-form .pitch-button{padding:13px 14px}}
 .status-screen .leave-game{align-self:center}
+/* 701~900px: 시안의 2단(문구 + 로그인 박스) 레이아웃은 문구 칸이 좁아져 야구공이 제목과 겹친다 → 1단으로 */
+@media(min-width:701px) and (max-width:900px){.entry-screen{grid-template-columns:1fr;gap:24px;max-width:520px;padding:40px 0}.entry-copy{min-height:250px}}
