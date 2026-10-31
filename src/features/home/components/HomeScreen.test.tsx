@@ -10,8 +10,15 @@ describe('HomeScreen', () => {
     expect(onStartSingle).toHaveBeenCalledOnce()
   })
 
-  it('1:1 대전 모드는 아직 노출하지 않는다', () => {
+  it('서버 연결이 없으면(onStartVersus 없음) 1:1 대전을 노출하지 않는다', () => {
     render(<HomeScreen onStartSingle={vi.fn()} />)
     expect(screen.queryByText('1:1 대전')).not.toBeInTheDocument()
+  })
+
+  it('onStartVersus 가 있으면 1:1 대전 카드를 보여준다', async () => {
+    const onStartVersus = vi.fn()
+    render(<HomeScreen onStartSingle={vi.fn()} onStartVersus={onStartVersus} />)
+    await userEvent.click(screen.getByRole('button', { name: /1:1 대전/ }))
+    expect(onStartVersus).toHaveBeenCalledOnce()
   })
 })

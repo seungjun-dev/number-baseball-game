@@ -1,6 +1,6 @@
 # 온라인 1:1 대전 설계 (Supabase)
 
-> 상태: 백엔드 구현 완료 (2026-10-31) — `supabase/migrations/`, 테스트 `supabase/tests/`. 앱 화면 연동은 다음 단계.
+> 상태: 백엔드 + 앱 화면 구현 완료 (2026-10-31) — 서버 `supabase/`, 앱 `src/features/{player,stats,match}`.
 
 ## 1. 전체 구조
 

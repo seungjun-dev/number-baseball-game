@@ -1,4 +1,5 @@
 import { createPlayerRepository, type PlayerRepository } from '../features/player'
+import { createMatchService, type MatchService } from '../features/match'
 import { createStatsRepository, type StatsRepository } from '../features/stats'
 import { getSupabase, type AppSupabaseClient } from '../lib/supabase'
 
@@ -6,12 +7,14 @@ import { getSupabase, type AppSupabaseClient } from '../lib/supabase'
 export type AppServices = {
   player: PlayerRepository | null
   stats: StatsRepository | null
+  match: MatchService | null
 }
 
 export function createAppServices(client: AppSupabaseClient | null = getSupabase()): AppServices {
   return {
     player: client ? createPlayerRepository(client) : null,
     stats: client ? createStatsRepository(client) : null,
+    match: client ? createMatchService(client) : null,
   }
 }
 

@@ -32,7 +32,9 @@
 ## 디렉토리 구조 (모듈화 원칙)
 ```
 src/
-  features/<기능명>/     # 기능 단위 모듈 (예: features/game)
+  app/services.ts       # 서버 연동 모듈 주입 (서버 미설정 시 null → 오프라인)
+  features/<기능명>/     # 기능 단위 모듈: game, home, player, stats, match
+    api/                #   서버 연동 (repository/service 인터페이스 + Supabase 구현)
     logic/              #   순수 로직 (React 의존 X) — 단위 테스트 필수
     components/         #   해당 기능 전용 UI 컴포넌트
     hooks/              #   해당 기능 전용 훅
@@ -41,7 +43,7 @@ src/
   hooks/                # 공용 훅
   utils/                # 공용 유틸 (순수 함수)
   types/                # 공용 타입
-  test/                 # 테스트 셋업
+  test/                 # 테스트 셋업, fakes/ (메모리 repository/service)
   lib/supabase/         # Supabase 클라이언트·설정·생성 타입
 supabase/
   config.toml           # 로컬 백엔드 설정
@@ -73,6 +75,8 @@ docs/                   # 설계 문서 (ONLINE_MATCH_DESIGN.md, LOCAL_BACKEND_S
 - 판정 로직을 SQL로 옮길 때는 TS 테스트와 같은 케이스(정답 3647 예시)를 pgTAP 테스트로 검증한다.
 - 키: 앱에는 Publishable key만 (`.env.local`). Secret/service_role key와 OAuth 시크릿은 `supabase/.env` 등 Git 밖에 둔다.
 - `.env.local` 이 없으면 온라인 기능만 비활성화되고 싱글 플레이는 동작해야 한다.
+- 각 기능의 서버 연동은 인터페이스(`PlayerRepository`, `StatsRepository`, `MatchService`)로 정의하고, 컴포넌트·훅 테스트는 `src/test/fakes/` 의 메모리 구현을 주입한다. 테스트는 항상 오프라인(vite.config `test.env`)으로 실행된다.
+- Realtime 은 "Subscribed to PostgreSQL" 이후 RPC 호출, 변경 알림이 오면 스냅샷을 다시 조회하는 방식으로 쓴다 (알림 유실에 강함).
 
 ## 변경 로그
 - 모든 기능 추가/수정/설정 변경은 `DEVLOG.md` 최상단에 날짜와 함께 기록한다.

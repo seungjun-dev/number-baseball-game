@@ -3,11 +3,12 @@ import { getDefaultServices, type AppServices } from './app/services'
 import { AppFooter, AppHeader, PrimaryButton, TextButton, ThemeToggle } from './components'
 import { SinglePlayGame, type GameState } from './features/game'
 import { HomeScreen } from './features/home'
+import { OnlineMatch } from './features/match'
 import { PlayerForm, PlayerSetupScreen, ProfileChip, usePlayer } from './features/player'
 import { StatsScreen } from './features/stats'
 import { THEME_CLASS, type ThemeMode } from './types/theme'
 
-type Screen = 'home' | 'single' | 'stats'
+type Screen = 'home' | 'single' | 'stats' | 'versus'
 
 const FOOTER_CAPTION: Record<ThemeMode, string> = {
   light: 'MINIMAL EDITORIAL',
@@ -72,7 +73,15 @@ function App({ services: injected }: { services?: AppServices }) {
         />
       )
     }
-    return <HomeScreen onStartSingle={() => setScreen('single')} />
+    if (screen === 'versus' && player.status === 'ready' && services.match) {
+      return <OnlineMatch service={services.match} userId={player.profile.id} onExit={goHome} />
+    }
+    return (
+      <HomeScreen
+        onStartSingle={() => setScreen('single')}
+        onStartVersus={online && services.match ? () => setScreen('versus') : undefined}
+      />
+    )
   }
 
   return (

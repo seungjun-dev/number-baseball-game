@@ -39,7 +39,7 @@ describe('App', () => {
 describe('App — 온라인', () => {
   it('첫 실행이면 플레이어 만들기 → 홈, 헤더에 내 프로필', async () => {
     const { createFakePlayerRepository } = await import('./test/fakes/player')
-    render(<App services={{ player: createFakePlayerRepository(), stats: null }} />)
+    render(<App services={{ player: createFakePlayerRepository(), stats: null, match: null }} />)
     await userEvent.type(await screen.findByLabelText('닉네임'), '민지')
     await userEvent.click(screen.getByRole('button', { name: /입단하기/ }))
     expect(await screen.findByRole('heading', { name: /오늘의 라인업은/ })).toBeInTheDocument()
@@ -56,6 +56,7 @@ describe('App — 전적', () => {
         services={{
           player: createFakePlayerRepository({ id: 'me', nickname: '민지', avatar: '🐯' }),
           stats: createFakeStatsRepository({ onlinePlayed: 1, onlineWins: 1 }),
+          match: null,
         }}
       />,
     )
