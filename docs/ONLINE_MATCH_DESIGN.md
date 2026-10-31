@@ -1,6 +1,6 @@
 # 온라인 1:1 대전 설계 (Supabase)
 
-> 상태: 초안 — 스키마 구현 전에 아래 "결정 필요" 항목을 확정한다.
+> 상태: 백엔드 구현 완료 (2026-10-31) — `supabase/migrations/`, 테스트 `supabase/tests/`. 앱 화면 연동은 다음 단계.
 
 ## 1. 전체 구조
 
@@ -32,7 +32,9 @@
 | `match_secrets` | 각자의 비밀 숫자 | **접근 불가** (정책 없음, RPC만 사용) |
 | `guesses` | 투구 기록 (match_id, user_id, 순번, 추측, strike, ball) | 참가자만 읽기 / 쓰기는 RPC만 |
 | `matchmaking_queue` | 랜덤 매칭 대기열 (user_id, enqueued_at, last_seen_at) | 본인 행만 읽기·삭제 |
-| `player_stats` (view) | 전적: 경기 수, 승/패, 승률, 평균 투구 수 | 모두 읽기 |
+| `solo_games` | 싱글 플레이 기록 (투구 수, 승패) — 클라이언트 보고값 | 본인만 읽기 / 쓰기는 RPC만 |
+
+전적은 뷰 대신 `get_player_stats(user_id)` 함수로 계산한다 (RLS로 숨겨진 남의 경기까지 집계해야 하므로).
 
 경기 상태: `waiting`(상대 대기) → `setting`(비밀 숫자 설정) → `playing` → `finished` | `abandoned` | `expired`
 
@@ -86,8 +88,40 @@ supabase/tests/              pgTAP 테스트 (판정·매칭·RLS)
 ```
 화면 → feature의 service/repository → `getSupabase()` 순서로만 접근한다.
 
-## 7. 결정 필요
-- [ ] **공정성**: 선공이 먼저 맞히면 후공에게 같은 횟수의 마지막 기회를 줄까? (야구식 "말 공격") — 추천: 준다, 둘 다 맞히면 무승부
-- [ ] 최대 투구 수 (싱글과 같은 9회?) 및 둘 다 못 맞힐 때 처리 — 추천: 9회씩, 무승부
-- [ ] 투구 제한 시간 (추천 30초)과 시간 초과 처리 방식
-- [ ] 싱글 플레이 전적도 서버에 저장할지 (추천: 저장 — 전적 화면에서 함께 표시)
+## 7. 확정된 규칙 (2026-10-31)
+- [x] **공정성**: 선공이 먼저 맞히면 후공에게 같은 횟수의 마지막 기회. 후공도 맞히면 무승부(`both_solved`), 못 맞히면 선공 승.
+      후공이 먼저 맞히면 (선공은 같은 횟수에 이미 실패했으므로) 즉시 후공 승.
+- [x] **최대 투구 수**: 각자 9회. 둘 다 못 맞히면 무승부(`max_attempts`).
+- [x] **제한 시간**: 턴당 30초 (+네트워크 여유 2초). 초과 시 그 턴은 아웃(`guesses.timed_out`).
+      같은 사람이 3턴 연속 시간 초과면 기권패(`timeout_forfeit`).
+      시간 초과는 ① 상대가 `claim_timeout` 호출 ② 늦게 온 본인 투구 ③ pg_cron 정리 작업(10초 주기) 중 가장 먼저 처리된다.
+- [x] **싱글 플레이 전적**도 서버에 저장 (`record_solo_game`).
+- 경기 중 나가기(`leave_match`)는 기권패(`forfeit`). 대기/설정 단계에서 나가면 경기 무효(`expired`, 전적 미반영).
+- 비밀 숫자 설정은 60초 안에 둘 다 끝내야 한다. 넘기면 경기 무효.
+
+## 8. RPC 목록 (앱에서 호출)
+
+| 함수 | 반환 | 설명 / 주요 에러 |
+| --- | --- | --- |
+| `get_active_match()` | uuid \| null | 이어하기용. 진행 중인 내 경기 |
+| `create_invite_match()` | `{match_id, invite_code}` | `already_in_match` |
+| `join_invite_match(p_code)` | uuid | 대소문자 무시. `invite_not_found`, `cannot_join_own_match`, `already_in_match` |
+| `enqueue_random_match()` | uuid \| null | 대기 중엔 **5~10초마다 재호출(heartbeat)**. 매칭되면 경기 id |
+| `cancel_matchmaking()` | void | |
+| `set_secret(p_match_id, p_secret)` | void | `invalid_number`, `secret_already_set`, `invalid_status` |
+| `submit_guess(p_match_id, p_guess)` | `{strike, ball, timed_out}` | `not_your_turn`, `invalid_number`, `invalid_status` |
+| `claim_timeout(p_match_id)` | boolean | 상대 턴 마감이 지났을 때 호출 |
+| `leave_match(p_match_id)` | void | |
+| `record_solo_game(p_attempts, p_won)` | void | `invalid_attempts` |
+| `get_player_stats(p_user_id?)` | 전적 1행 | 생략 시 본인 |
+
+공통 에러: `not_authenticated`, `profile_required`(프로필 먼저 생성), `match_not_found`.
+프로필은 RPC 없이 `profiles` 테이블에 직접 insert/update (닉네임·아바타 컬럼만 허용).
+
+## 9. Realtime 사용 시 주의
+- 채널의 `SUBSCRIBED` 상태 직후에는 DB 변경 스트림이 아직 준비 전일 수 있다.
+  `system` 이벤트의 **"Subscribed to PostgreSQL"** 을 받은 뒤에 매칭/경기 RPC를 호출한다.
+  (로컬 첫 구독에서 1.5초 대기로는 알림을 놓치는 것을 확인함)
+- 알림을 놓쳐도 동작하도록: 랜덤 대기 중에는 `enqueue_random_match()` heartbeat 결과로도 매칭을 감지하고,
+  경기 화면은 재연결 시 `matches`/`guesses` 를 다시 조회해 상태를 맞춘다.
+- 턴 타이머 표시는 서버의 `turn_started_at` + `turn_seconds` 기준으로 계산한다 (기기 시계 차이 주의).

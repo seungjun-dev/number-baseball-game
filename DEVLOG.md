@@ -2,6 +2,41 @@
 
 최신 항목이 위에 오도록 기록합니다.
 
+## 2026-10-31 — 온라인 대전·전적 백엔드 구현 (Supabase)
+### 결정 (설계 문서 7장, 추천안 채택)
+- 선공이 먼저 맞히면 후공에게 마지막 기회 → 둘 다 맞히면 무승부
+- 각자 최대 9회, 둘 다 실패 시 무승부 / 턴 제한 30초(+2초), 3턴 연속 시간 초과 시 기권패
+- 싱글 플레이 전적도 서버 저장
+
+### 변경 사항
+- Docker Desktop 설치 후 로컬 Supabase 실행 확인
+- `supabase/migrations/20261031000001_schema.sql`
+  - 테이블: profiles, matches, match_players, match_secrets, guesses, matchmaking_queue, solo_games
+  - 모든 테이블 RLS, 쓰기 권한 회수(RPC로만), 비밀 숫자 테이블은 앱 접근 불가, anon 접근 차단
+  - profiles 는 닉네임·아바타 컬럼만 본인 수정 허용
+  - Realtime publication: matches, match_players, guesses
+- `supabase/migrations/20261031000002_match_rpc.sql`
+  - 판정/검증(`private.judge`, `private.is_valid_number`) — TS 로직과 동일 규칙
+  - 초대 코드 방 생성·참가, 랜덤 매칭(advisory lock 직렬화 + heartbeat + 20초 미응답 제외)
+  - 비밀 숫자 설정 → 선공 무작위, 투구 판정, 마지막 기회, 무승부, 시간 초과, 기권
+  - 싱글 기록, 전적 조회(`get_player_stats`)
+  - pg_cron 10초 주기 정리 작업(만료 방, 오래된 대기열, 턴 시간 초과)
+- `src/lib/supabase/database.types.ts` 생성, 클라이언트를 `SupabaseClient<Database>` 로 타입 지정
+- 설계 문서에 확정 규칙, RPC 목록, Realtime 주의사항 추가
+
+### 버그 수정 (개발 중 발견)
+- 3턴 연속 시간 초과·경기 중 나가기 시 `finish_match` 인자 타입 불일치(integer vs smallint)로 실패하던 문제 → 파라미터를 integer 로 변경
+
+### 테스트
+- pgTAP 3개 파일 67개 통과 (`npx supabase test db`)
+  - 01_rules: 규칙 예시(정답 3647) 판정, 숫자 검증
+  - 02_security: 비밀 숫자 조회 차단, 직접 쓰기 차단, 제3자 조회 차단, anon RPC 차단
+  - 03_match_flow: 초대/참가, 무승부·선공승·후공승·최대 횟수, 시간 초과·연속 시간 초과 기권, 기권, 랜덤 매칭·heartbeat·정리·취소, 전적
+- supabase-js 실제 API 스모크 테스트: 익명 로그인 → 프로필 → 랜덤 매칭 → Realtime 알림 → 비밀 숫자 → 투구 → 전적 통과
+  - Realtime 첫 구독 직후(1.5초) 알림 누락 확인 → "Subscribed to PostgreSQL" 이후 호출하도록 설계 문서에 반영
+- pg_cron 정리 작업 등록·실행 성공 확인
+- 앱: 전체 테스트, build, lint 통과
+
 ## 2026-10-29 — 온라인 대전용 백엔드(Supabase) 개발 환경 세팅
 ### 결정
 - 1:1 대전을 온라인(각자 폰)으로 하기로 결정 → 전적 포함 서버 데이터는 Supabase(BaaS) 사용

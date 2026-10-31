@@ -27,6 +27,7 @@
 | `npm run db:migration <이름>` | 새 마이그레이션 생성 |
 | `npm run db:reset` | 로컬 DB 초기화 + 마이그레이션 재적용 |
 | `npm run db:types` | DB 타입 생성 → `src/lib/supabase/database.types.ts` |
+| `npx supabase test db` | DB 테스트 (pgTAP, `supabase/tests/`) |
 
 ## 디렉토리 구조 (모듈화 원칙)
 ```
