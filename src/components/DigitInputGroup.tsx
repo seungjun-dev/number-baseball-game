@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent, type KeyboardEvent } from 'react'
+import { useLayoutEffect, useRef, type ChangeEvent, type KeyboardEvent } from 'react'
 
 type Props = {
   /** 칸별 값 (빈 칸은 '') */
@@ -16,7 +16,9 @@ export function DigitInputGroup({ digits, onChange, onEnter, disabled, labelFor 
   const refs = useRef<(HTMLInputElement | null)[]>([])
   // 리렌더 전에 입력이 연달아 들어와도(빠른 입력·모바일 IME) 최신 값을 기준으로 갱신하기 위한 ref
   const latest = useRef(digits)
-  latest.current = digits
+  useLayoutEffect(() => {
+    latest.current = digits
+  }, [digits])
   const focusAt = (index: number) => refs.current[index]?.focus()
 
   const setDigit = (index: number, digit: string) => {

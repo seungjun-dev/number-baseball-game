@@ -35,3 +35,14 @@ describe('App', () => {
     expect(screen.queryByText(/로그인|대전/)).not.toBeInTheDocument()
   })
 })
+
+describe('App — 온라인', () => {
+  it('첫 실행이면 플레이어 만들기 → 홈, 헤더에 내 프로필', async () => {
+    const { createFakePlayerRepository } = await import('./test/fakes/player')
+    render(<App services={{ player: createFakePlayerRepository() }} />)
+    await userEvent.type(await screen.findByLabelText('닉네임'), '민지')
+    await userEvent.click(screen.getByRole('button', { name: /입단하기/ }))
+    expect(await screen.findByRole('heading', { name: /오늘의 라인업은/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '민지 전적 보기' })).toBeInTheDocument()
+  })
+})
