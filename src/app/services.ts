@@ -1,14 +1,17 @@
 import { createPlayerRepository, type PlayerRepository } from '../features/player'
+import { createStatsRepository, type StatsRepository } from '../features/stats'
 import { getSupabase, type AppSupabaseClient } from '../lib/supabase'
 
 /** 앱이 쓰는 서버 연동 모듈 모음. 서버 설정이 없으면 모두 null (오프라인). */
 export type AppServices = {
   player: PlayerRepository | null
+  stats: StatsRepository | null
 }
 
 export function createAppServices(client: AppSupabaseClient | null = getSupabase()): AppServices {
   return {
     player: client ? createPlayerRepository(client) : null,
+    stats: client ? createStatsRepository(client) : null,
   }
 }
 

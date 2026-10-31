@@ -48,6 +48,18 @@ describe('useSinglePlayGame', () => {
     expect(result.current.game.status).toBe('won')
   })
 
+  it('경기가 끝나면 onGameEnd 를 한 번 호출한다', () => {
+    const onGameEnd = vi.fn()
+    const { result } = setup({ onGameEnd })
+    act(() => void result.current.pitch('1234'))
+    act(() => void vi.advanceTimersByTime(T.idle))
+    act(() => void result.current.pitch('3647'))
+    expect(onGameEnd).not.toHaveBeenCalled()
+    act(() => void vi.advanceTimersByTime(T.finish))
+    expect(onGameEnd).toHaveBeenCalledOnce()
+    expect(onGameEnd.mock.calls[0][0]).toMatchObject({ status: 'won', guesses: { length: 2 } })
+  })
+
   it('최대 투구 수를 다 쓰면 패배로 끝난다', () => {
     const { result } = setup({ maxAttempts: 1 })
     act(() => void result.current.pitch('1234'))

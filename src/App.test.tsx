@@ -39,10 +39,34 @@ describe('App', () => {
 describe('App — 온라인', () => {
   it('첫 실행이면 플레이어 만들기 → 홈, 헤더에 내 프로필', async () => {
     const { createFakePlayerRepository } = await import('./test/fakes/player')
-    render(<App services={{ player: createFakePlayerRepository() }} />)
+    render(<App services={{ player: createFakePlayerRepository(), stats: null }} />)
     await userEvent.type(await screen.findByLabelText('닉네임'), '민지')
     await userEvent.click(screen.getByRole('button', { name: /입단하기/ }))
     expect(await screen.findByRole('heading', { name: /오늘의 라인업은/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '민지 전적 보기' })).toBeInTheDocument()
+  })
+})
+
+describe('App — 전적', () => {
+  it('헤더 프로필을 누르면 전적 화면, 프로필 수정이 헤더에 반영된다', async () => {
+    const { createFakePlayerRepository } = await import('./test/fakes/player')
+    const { createFakeStatsRepository } = await import('./test/fakes/stats')
+    render(
+      <App
+        services={{
+          player: createFakePlayerRepository({ id: 'me', nickname: '민지', avatar: '🐯' }),
+          stats: createFakeStatsRepository({ onlinePlayed: 1, onlineWins: 1 }),
+        }}
+      />,
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '민지 전적 보기' }))
+    expect(await screen.findByText('1승 0패')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '프로필 수정' }))
+    const input = screen.getByLabelText('닉네임')
+    await userEvent.clear(input)
+    await userEvent.type(input, '민지짱')
+    await userEvent.click(screen.getByRole('button', { name: /저장/ }))
+    expect(await screen.findByRole('button', { name: '민지짱 전적 보기' })).toBeInTheDocument()
   })
 })

@@ -20,12 +20,15 @@ export type SinglePlayOptions = {
   createAnswer?: () => string
   maxAttempts?: number
   timing?: PitchTiming
+  /** 경기 종료 연출까지 끝났을 때 한 번 호출 (전적 저장 등) */
+  onGameEnd?: (game: GameState) => void
 }
 
 export function useSinglePlayGame({
   createAnswer = generateAnswer,
   maxAttempts = MAX_ATTEMPTS,
   timing = DEFAULT_PITCH_TIMING,
+  onGameEnd,
 }: SinglePlayOptions = {}) {
   const [game, setGame] = useState<GameState>(() => createGame(createAnswer(), maxAttempts))
   const [phase, setPhase] = useState<PitchPhase>('idle')
@@ -55,7 +58,11 @@ export function useSinglePlayGame({
     setPhase('swing')
     schedule(() => setPhase('miss'), timing.miss)
     schedule(() => setPhase(next.status === 'won' ? 'victory' : 'call'), timing.call)
-    if (over) schedule(() => setFinished(true), timing.finish)
+    if (over)
+      schedule(() => {
+        setFinished(true)
+        onGameEnd?.(next)
+      }, timing.finish)
     else schedule(() => setPhase('idle'), timing.idle)
     return true
   }
