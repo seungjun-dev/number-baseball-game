@@ -2,6 +2,22 @@
 
 최신 항목이 위에 오도록 기록합니다.
 
+## 2026-11-03 — CI 스테이징 반영을 최소 권한 방식으로 변경
+### 결정
+- Supabase 액세스 토큰은 계정 전체(모든 프로젝트) 권한이라 CI 에 등록하지 않음
+- 대신 스테이징 DB 하나에만 접근 가능한 접속 주소(Session pooler) Secret 하나만 사용
+
+### 변경 사항
+- `.github/workflows/ci.yml` 스테이징 반영 job: `supabase link` 제거 → `supabase db push --db-url "$SUPABASE_STAGING_DB_URL" --include-all`,
+  Secret 누락 시 명확한 오류 메시지
+- `docs/DEPLOYMENT.md` C 단계 재작성: 접속 주소 복사(퍼센트 인코딩, IPv6 주의), staging 환경 `main` 브랜치 제한, 보안 운영
+- `README.md` 비밀값 표 갱신
+- 필요한 GitHub 설정: `staging` 환경 Secret `SUPABASE_STAGING_DB_URL` + 레포 변수 `SUPABASE_STAGING_PROJECT_REF`
+
+### 테스트
+- 워크플로 YAML 파싱 확인
+- `supabase db push --db-url ... --include-all --dry-run` 을 로컬 DB 에 실행해 동작 확인 ("up to date")
+
 ## 2026-11-03 — README: 기술 스택 · 개발 가이드 정리
 ### 변경 사항
 - `README.md` 전면 개편: 주요 기능, 게임 규칙, 기술 스택(버전·선택 이유), 아키텍처·설계 원칙, 디렉토리 구조,

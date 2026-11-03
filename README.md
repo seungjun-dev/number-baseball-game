@@ -255,7 +255,8 @@ npm run dev
 | 값 | 위치 | Git |
 | --- | --- | --- |
 | Supabase URL, **Publishable key** | `.env.local` (로컬), Vercel 환경변수 (배포) | ❌ (`.env.example` 만 커밋) |
-| Secret key, DB 비밀번호, 액세스 토큰 | GitHub Secrets, 비밀번호 관리자 | ❌ 절대 커밋·앱 포함 금지 |
+| 스테이징 DB 접속 주소 (CI 용) | GitHub `staging` 환경 Secret (`main` 브랜치만 사용) | ❌ |
+| Secret key, DB 비밀번호, 액세스 토큰 | 비밀번호 관리자 (CI 에는 등록하지 않음) | ❌ 절대 커밋·앱 포함 금지 |
 | OAuth 시크릿 (추후) | `supabase/.env` | ❌ |
 
 ### 커밋 · 기록

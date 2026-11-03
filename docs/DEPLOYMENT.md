@@ -83,15 +83,29 @@ npx supabase db push --linked
 `main` 에 새 마이그레이션이 들어오면 테스트 통과 후 스테이징 DB 에 자동 반영되도록 설정합니다.
 (설정 전에도 CI 의 lint·test·build·DB 테스트는 동작하고, 반영 단계만 건너뜁니다.)
 
-1. Supabase 액세스 토큰 발급: https://supabase.com/dashboard/account/tokens → **Generate new token** (이름: `github-actions`)
+> **최소 권한 원칙**: Supabase 액세스 토큰은 계정의 모든 프로젝트(추후 운영 포함)를 관리할 수 있어 CI 에 쓰지 않습니다.
+> 대신 **스테이징 DB 하나에만 접근 가능한 접속 주소**만 등록합니다. 유출되더라도 영향 범위가 스테이징 DB 로 한정됩니다.
+
+1. **스테이징 DB 접속 주소 복사**
+   - Supabase 대시보드 상단 **Connect** → **Session pooler** 탭의 연결 문자열
+     (예: `postgresql://postgres.<ref>:[YOUR-PASSWORD]@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres`)
+   - `[YOUR-PASSWORD]` 를 A-1 의 DB 비밀번호로 바꿉니다.
+     비밀번호에 `@ : / ? # %` 같은 특수문자가 있으면 **퍼센트 인코딩** 필요 (예: `@` → `%40`) — 번거로우면 영문·숫자로만 된 비밀번호로 재설정
+   - ⚠️ **Direct connection** 주소는 쓰지 마세요. GitHub 실행 환경은 IPv6 를 지원하지 않아 연결이 실패할 수 있습니다.
+   - 이 주소는 채팅·코드·문서에 붙여넣지 말고 아래 GitHub 화면에만 입력합니다.
 2. GitHub 레포 → **Settings → Environments → New environment** → 이름 `staging`
-   - **Environment secrets** 추가
-     - `SUPABASE_ACCESS_TOKEN` = 1번 토큰
-     - `SUPABASE_STAGING_DB_PASSWORD` = A-1 의 DB 비밀번호
+   - **Deployment branches and tags** → `Selected branches and tags` → `main` 만 추가 (다른 브랜치에서 이 Secret 사용 불가)
+   - **Environment secrets** → `SUPABASE_STAGING_DB_URL` = 1번 접속 주소
 3. GitHub 레포 → **Settings → Secrets and variables → Actions → Variables 탭 → New repository variable**
-   - `SUPABASE_STAGING_PROJECT_REF` = A-2 의 Project ref
+   - `SUPABASE_STAGING_PROJECT_REF` = A-2 의 Project ref (자동 반영을 켜는 스위치 역할)
    - (repository variable 이어야 함 — job 실행 조건 `if` 에서 environment 변수는 읽을 수 없음)
-4. 확인: 레포 **Actions** 탭 → 최근 CI 실행에서 `스테이징 DB 마이그레이션 반영` 단계가 성공
+4. 확인: 레포 **Actions** 탭 → 다음 `main` push 의 CI 에서 `스테이징 DB 마이그레이션 반영` 단계가 성공
+   (반영할 새 마이그레이션이 없으면 "Remote database is up to date" 로 끝나는 것이 정상)
+
+**보안 운영**
+- 유출이 의심되면 대시보드 Project Settings → Database → **Reset database password** 후 Secret 교체
+- 외부 사람이 올린 PR(포크)에는 GitHub 이 Secret 을 넘기지 않고, 반영 단계는 `main` push 에서만 실행됩니다.
+- 운영(production) 프로젝트를 만들 때도 같은 방식으로 `production` 환경 + 별도 접속 주소를 씁니다.
 
 ## D. 스테이징 테스트 체크리스트
 
