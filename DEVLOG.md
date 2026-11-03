@@ -2,6 +2,24 @@
 
 최신 항목이 위에 오도록 기록합니다.
 
+## 2026-11-03 — 배포 1단계: 스테이징 환경 준비
+### 결정
+- 서버: Supabase Cloud 스테이징 프로젝트(서울 리전), 웹: Vercel, 자동화: GitHub Actions
+- 운영(production) 프로젝트 분리와 안드로이드(Capacitor/Play)는 2·3단계에서 진행
+
+### 변경 사항
+- `.github/workflows/ci.yml`
+  - push/PR: lint · 앱 테스트 · build, DB 컨테이너만 띄워 pgTAP 테스트
+  - `main` push + 통과 시: 스테이징 DB 마이그레이션 자동 반영 (`SUPABASE_STAGING_PROJECT_REF` 변수가 있을 때만)
+- `vercel.json`: Vite 빌드 설정, 해시된 정적 파일 장기 캐시
+- npm 스크립트 `db:link`, `db:push`
+- `docs/DEPLOYMENT.md`: Supabase 프로젝트 생성·연결·반영, Vercel 연결·환경변수, GitHub secrets/variables, 스테이징 테스트 체크리스트
+
+### 테스트
+- 워크플로 YAML 파싱, 사용하는 Supabase CLI 명령/옵션 존재 확인
+- 앱 테스트·build·lint 통과
+- 실제 스테이징 배포는 계정 생성 후 진행 예정 (미검증)
+
 ## 2026-10-31 — 플레이어 만들기 화면 중간 폭 레이아웃 수정
 ### 변경 사항
 - 701~900px 폭에서 시안의 2단 레이아웃(문구 + 입력 박스)의 문구 칸이 좁아져 야구공 그림이 "YOURS." 제목과 겹치던 문제

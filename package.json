@@ -17,7 +17,9 @@
     "db:reset": "supabase db reset",
     "db:migration": "supabase migration new",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
-    "functions:serve": "supabase functions serve"
+    "functions:serve": "supabase functions serve",
+    "db:push": "supabase db push",
+    "db:link": "supabase link"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

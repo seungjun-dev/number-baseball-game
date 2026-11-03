@@ -28,6 +28,7 @@
 | `npm run db:reset` | 로컬 DB 초기화 + 마이그레이션 재적용 |
 | `npm run db:types` | DB 타입 생성 → `src/lib/supabase/database.types.ts` |
 | `npx supabase test db` | DB 테스트 (pgTAP, `supabase/tests/`) |
+| `npm run db:link` / `db:push` | 원격(스테이징) 프로젝트 연결 / 마이그레이션 반영 ⚠️ 원격 DB 변경 |
 
 ## 디렉토리 구조 (모듈화 원칙)
 ```
@@ -81,6 +82,12 @@ docs/                   # 설계 문서 (ONLINE_MATCH_DESIGN.md, LOCAL_BACKEND_S
 ## 변경 로그
 - 모든 기능 추가/수정/설정 변경은 `DEVLOG.md` 최상단에 날짜와 함께 기록한다.
 - 형식: `## YYYY-MM-DD — 제목` 아래에 변경 내용, 테스트 결과를 적는다.
+
+## 배포
+- 가이드: `docs/DEPLOYMENT.md` (1단계: 스테이징 = Supabase Cloud + Vercel)
+- CI(`.github/workflows/ci.yml`): push/PR 마다 lint·test·build·DB 테스트, `main` 은 통과 후 스테이징 DB 마이그레이션 자동 반영
+- 웹은 Vercel 이 `main` push 시 자동 배포 (`vercel.json`), 환경변수는 Vercel 대시보드에서 관리
+- 이미 원격에 반영된 마이그레이션 파일은 수정하지 않는다. 변경은 항상 새 마이그레이션으로.
 
 ## Git
 - 기본 브랜치: `main`
