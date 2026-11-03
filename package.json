@@ -18,7 +18,7 @@
     "db:migration": "supabase migration new",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
     "functions:serve": "supabase functions serve",
-    "db:push": "supabase db push",
+    "db:push": "supabase db push --linked",
     "db:link": "supabase link"
   },
   "dependencies": {

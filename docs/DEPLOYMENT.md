@@ -26,7 +26,13 @@ GitHub (main push)
    - **Project URL**: `https://<ref>.supabase.co`
    - **Publishable key**: Project Settings → API Keys → `sb_publishable_…` (앱에 들어가는 공개용 키)
 3. **Authentication → Sign In / Providers → Anonymous sign-ins: 켜기** (로컬은 `config.toml` 로 켜져 있지만 원격은 따로 켜야 함)
-4. 처음 한 번은 로컬 터미널에서 DB 구조를 올립니다 (프로젝트 폴더에서):
+4. 처음 한 번은 로컬 터미널에서 DB 구조를 올립니다.
+   ⚠️ 반드시 **프로젝트 폴더(`number-baseball-game/`)에서** 실행하세요. 상위 폴더에서 `npx supabase` 를 실행하면
+   프로젝트에 설치된 CLI(2.x) 대신 최신 CLI 를 새로 받아 쓰고, 연결 정보도 엉뚱한 폴더에 저장됩니다.
+
+```bash
+cd number-baseball-game
+```
 
 ```bash
 npx supabase login
@@ -39,15 +45,22 @@ npx supabase link --project-ref <ref>
 DB 비밀번호를 물으면 1번에서 만든 비밀번호 입력.
 
 ```bash
-npx supabase db push
+npx supabase db push --linked --dry-run
 ```
-`20261031000001_schema.sql`, `20261031000002_match_rpc.sql` 두 개가 적용되면 성공.
+적용될 마이그레이션 목록 확인 (`20261031000001_schema.sql`, `20261031000002_match_rpc.sql`).
+
+```bash
+npx supabase db push --linked
+```
+두 개가 적용되면 성공. (`--linked` 를 붙여 원격 대상임을 명시 — CLI 3.x 는 기본 대상이 로컬 DB)
+
+> 출력에 `migration repair` 를 권하는 메시지가 나와도 실행 위치·대상(`Target:` 줄)을 먼저 확인하세요.
 
 5. 대시보드에서 확인
    - Table Editor: `profiles`, `matches` 등 7개 테이블
    - Integrations → Cron: `number-baseball-sweep` (10초 주기) 활성
 
-> ⚠️ link 이후 `npx supabase db push` 는 **원격(스테이징) DB**를 바꿉니다. 로컬 초기화(`npm run db:reset`)는 로컬에만 영향.
+> ⚠️ `npx supabase db push --linked` 는 **원격(스테이징) DB**를 바꿉니다. 로컬 초기화(`npm run db:reset`)는 로컬에만 영향.
 
 ## B. Vercel 웹 배포 (약 5분)
 
